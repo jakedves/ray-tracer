@@ -26,12 +26,14 @@ fn main() {
     content += &header;
 
     for j in (0..IMAGE_HEIGHT).rev() {
+        println!("Scanlines remaining: {}", j);
+
         for i in 0..IMAGE_WIDTH {
             let r = i as f64 / (IMAGE_WIDTH - 1) as f64 * 255.999;
             let g = j as f64 / (IMAGE_HEIGHT - 1) as f64 * 255.999;
             let b = 0.25 * 255.999;
 
-            content += &format!("{} {} {}", r as i64, g as i64, b as i64).to_string();
+            content += &format!("{} {} {}\n", r as i64, g as i64, b as i64).to_string();
         }
     }
 
