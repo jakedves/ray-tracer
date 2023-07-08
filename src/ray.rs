@@ -4,6 +4,7 @@ use crate::vector::length_squared;
 
 type Point = Vector3<f64>;
 
+#[derive(Clone, Copy)]
 pub struct Ray {
     pub origin: Point,
     pub direction: Vector3<f64>,
@@ -14,7 +15,7 @@ impl Ray {
         Ray { origin, direction }
     }
 
-    pub fn at(&self, t: f64) -> Point {
+    pub fn at(self, t: f64) -> Point {
         self.origin + t * self.direction
     }
 
@@ -30,7 +31,7 @@ impl Ray {
      * We only get one value of t, as we only need to render the first point we see with
      * our ray.
      */
-    pub fn hits_sphere(&self, center: Point, radius: f64) -> f64 {
+    pub fn hits_sphere(self, center: Point, radius: f64) -> f64 {
         let translation = self.origin - center;
         let a = length_squared(self.direction);
         let half_b = translation.dot(self.direction);

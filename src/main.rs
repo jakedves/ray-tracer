@@ -1,5 +1,7 @@
+mod hittable;
 pub mod ray;
 mod vector;
+mod sphere;
 
 use std::fs::File;
 use std::io::Result;
@@ -28,7 +30,7 @@ const VERTICAL: Point = Point::new(0.0, VIEWPORT_HEIGHT, 0.0);
 const MAX_COLOR: i64 = 255;
 const FILE_TYPE: &str = "P3";
 
-fn ray_color(ray: &Ray) -> Color {
+fn ray_color(ray: Ray) -> Color {
     // render a red sphere:
     let t = ray.hits_sphere(Point::new(0.0, 0.0, -1.0), 0.5);
 
@@ -86,7 +88,7 @@ fn main() {
                 lower_left_corner + u * HORIZONTAL + v * VERTICAL - ORIGIN,
             );
 
-            let color = ray_color(&r);
+            let color = ray_color(r);
 
             write_color(&mut file, color);
         }
