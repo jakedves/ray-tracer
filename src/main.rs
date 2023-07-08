@@ -30,11 +30,14 @@ const FILE_TYPE: &str = "P3";
 
 fn ray_color(ray: &Ray) -> Color {
     // render a red sphere:
-    if ray.hits_sphere(Point::new(0.0, 0.0, -1.0), 0.5) {
-        return Color::new(1.0, 0.0, 0.0); // make it red
+    let t = ray.hits_sphere(Point::new(0.0, 0.0, -1.0), 0.5);
+
+    if t > 0.0 {
+        let normal = unit_vector(ray.at(t) - Point::new(0.0, 0.0, -1.0));
+        return 0.5 * Color::new(normal.x + 1.0, normal.y + 1.0, normal.z + 1.0);
     }
 
-    let unit_direction = unit_vector(&ray.direction);
+    let unit_direction = unit_vector(ray.direction);
     let t = 0.5 * (unit_direction.y + 1.0);
     (1.0 - t) * Color::new(1.0, 1.0, 1.0) + t * Color::new(0.5, 0.7, 1.0)
 }
