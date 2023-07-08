@@ -29,6 +29,11 @@ const MAX_COLOR: i64 = 255;
 const FILE_TYPE: &str = "P3";
 
 fn ray_color(ray: &Ray) -> Color {
+    // render a red sphere:
+    if ray.hits_sphere(Point::new(0.0, 0.0, -1.0), 0.5) {
+        return Color::new(1.0, 0.0, 0.0); // make it red
+    }
+
     let unit_direction = unit_vector(&ray.direction);
     let t = 0.5 * (unit_direction.y + 1.0);
     (1.0 - t) * Color::new(1.0, 1.0, 1.0) + t * Color::new(0.5, 0.7, 1.0)
