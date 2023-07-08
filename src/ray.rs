@@ -1,5 +1,7 @@
 use cgmath::{InnerSpace, Vector3};
 
+use crate::vector::length_squared;
+
 type Point = Vector3<f64>;
 
 pub struct Ray {
@@ -22,14 +24,23 @@ impl Ray {
      * We are using some rearranged formula to solve a quadratic equation. We are looking
      * to see if the intersection of the ray and there sphere, has any existing real roots,
      * which happens when the discriminant of the quadratic equation is positive.
+     *
+     * This gives us the parameter t, at which our ray: origin + t*dir = point on sphere
+     *
+     * We only get one value of t, as we only need to render the first point we see with
+     * our ray.
      */
-    pub fn hits_sphere(&self, center: Point, radius: f64) -> bool {
+    pub fn hits_sphere(&self, center: Point, radius: f64) -> f64 {
         let translation = self.origin - center;
-        let a = self.direction.dot(self.direction);
-        let b = 2.0 * translation.dot(self.direction);
-        let c = translation.dot(translation) - radius.powi(2);
-        let discriminant = b.powi(2) - 4.0 * a * c;
+        let a = length_squared(self.direction);
+        let half_b = translation.dot(self.direction);
+        let c = length_squared(translation) - radius.powi(2);
+        let discriminant = half_b.powi(2) - a * c;
 
-        discriminant > 0.0
+        if discriminant < 0.0 {
+            -1.0
+        } else {
+            (-half_b - discriminant.sqrt()) / a
+        }
     }
 }
