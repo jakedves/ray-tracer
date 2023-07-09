@@ -1,3 +1,4 @@
+mod camera;
 mod hittable;
 pub mod ray;
 mod sphere;
@@ -8,6 +9,9 @@ use std::fs::File;
 use std::io::Result;
 use std::io::Write;
 
+use rand::Rng;
+
+use camera::Camera;
 use hittable::HitRecord;
 use hittable::Hittable;
 use ray::Ray;
@@ -18,18 +22,9 @@ use vector::Point;
 use world::World;
 
 // IMAGE
-const ASPECT_RATIO: f64 = 16.0 / 9.0;
 const IMAGE_WIDTH: i64 = 480;
 const IMAGE_HEIGHT: i64 = 270;
-
-// CAMERA
-const VIEWPORT_HEIGHT: f64 = 2.0;
-const VIEWPORT_WIDTH: f64 = ASPECT_RATIO * VIEWPORT_HEIGHT;
-const FOCAL_LENGTH: f64 = 1.0;
-
-const ORIGIN: Point = Point::new(0.0, 0.0, 0.0);
-const HORIZONTAL: Point = Point::new(VIEWPORT_WIDTH, 0.0, 0.0);
-const VERTICAL: Point = Point::new(0.0, VIEWPORT_HEIGHT, 0.0);
+const SAMPLES_PER_PIXEL: i64 = 100;
 
 // FILE
 const MAX_COLOR: i64 = 255;
@@ -53,26 +48,33 @@ fn write_file(content: &str) -> Result<File> {
     Ok(file)
 }
 
-fn write_color(file: &mut File, color: Color) {
+fn write_color(file: &mut File, color: Color, samples: i64) {
+    let mut r = color.x;
+    let mut g = color.y;
+    let mut b = color.z;
+
+    let scale = 1.0 / samples as f64;
+    r *= scale;
+    g *= scale;
+    b *= scale;
+
     let string = format!(
         "{} {} {}\n",
-        (color.x * 255.999) as i64,
-        (color.y * 255.999) as i64,
-        (color.z * 255.999) as i64
+        (r.clamp(0.0, 0.999) * 256.0) as i64,
+        (g.clamp(0.0, 0.999) * 256.0) as i64,
+        (b.clamp(0.0, 0.999) * 256.0) as i64,
     );
+
     file.write_all(string.as_bytes()).unwrap();
 }
 
 fn main() {
-    // Setup camera: (0, 0, 0) (center), halfway down the max height,
-    // halfway left from max width, and moved backwards by focal length
-    let lower_left_corner: Point =
-        ORIGIN - (HORIZONTAL / 2.0) - (VERTICAL / 2.0) - Point::new(0.0, 0.0, FOCAL_LENGTH);
-
     let world: Vec<Box<dyn Hittable>> = vec![
         Box::new(Sphere::new(Point::new(0.0, 0.0, -1.0), 0.5)),
         Box::new(Sphere::new(Point::new(0.0, -100.5, -1.0), 100.0)),
     ];
+
+    let camera = Camera::new();
 
     // render
     let header = format!(
@@ -82,22 +84,24 @@ fn main() {
 
     // code can panic here
     let mut file = write_file(header.as_str()).unwrap();
+    let mut rng = rand::thread_rng();
 
     for j in (0..IMAGE_HEIGHT).rev() {
         println!("Scanlines remaining: {}", j);
 
         for i in 0..IMAGE_WIDTH {
-            let u = i as f64 / (IMAGE_WIDTH - 1) as f64;
-            let v = j as f64 / (IMAGE_HEIGHT - 1) as f64;
+            let mut color = Color::new(0.0, 0.0, 0.0);
 
-            let r = Ray::new(
-                ORIGIN,
-                lower_left_corner + u * HORIZONTAL + v * VERTICAL - ORIGIN,
-            );
+            for _ in 0..SAMPLES_PER_PIXEL {
+                let u = (i as f64 + rng.gen::<f64>()) / (IMAGE_WIDTH - 1) as f64;
+                let v = (j as f64 + rng.gen::<f64>()) / (IMAGE_HEIGHT - 1) as f64;
 
-            let color = ray_color(r, &world);
+                let r = camera.get_ray(u, v);
 
-            write_color(&mut file, color);
+                color += ray_color(r, &world);
+            }
+
+            write_color(&mut file, color, SAMPLES_PER_PIXEL);
         }
     }
 }
