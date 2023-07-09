@@ -16,6 +16,8 @@ use hittable::HitRecord;
 use hittable::Hittable;
 use ray::Ray;
 use sphere::Sphere;
+use vector::random_in_unit_sphere;
+use vector::random_unit_vector;
 use vector::unit_vector;
 use vector::Color;
 use vector::Point;
@@ -25,15 +27,27 @@ use world::World;
 const IMAGE_WIDTH: i64 = 480;
 const IMAGE_HEIGHT: i64 = 270;
 const SAMPLES_PER_PIXEL: i64 = 100;
+const MAX_DEPTH: i64 = 50;
 
 // FILE
 const MAX_COLOR: i64 = 255;
 const FILE_TYPE: &str = "P3";
 
-fn ray_color(ray: Ray, world: &World) -> Color {
+fn ray_color(ray: Ray, world: &World, depth: i64) -> Color {
     let mut record = HitRecord::new();
-    if world.hit(ray, 0.0, f64::INFINITY, &mut record) {
-        return 0.5 * (record.normal + Color::new(1.0, 1.0, 1.0));
+
+    if depth <= 0 {
+        return Color::new(0.0, 0.0, 0.0);
+    }
+
+    if world.hit(ray, 0.001, f64::INFINITY, &mut record) {
+        let target = record.point + record.normal + random_unit_vector();
+        return 0.5
+            * ray_color(
+                Ray::new(record.point, target - record.point),
+                world,
+                depth - 1,
+            );
     }
 
     let unit_direction = unit_vector(ray.direction);
@@ -54,9 +68,9 @@ fn write_color(file: &mut File, color: Color, samples: i64) {
     let mut b = color.z;
 
     let scale = 1.0 / samples as f64;
-    r *= scale;
-    g *= scale;
-    b *= scale;
+    r = (scale * r).sqrt();
+    g = (scale * g).sqrt();
+    b = (scale * b).sqrt();
 
     let string = format!(
         "{} {} {}\n",
@@ -98,7 +112,7 @@ fn main() {
 
                 let r = camera.get_ray(u, v);
 
-                color += ray_color(r, &world);
+                color += ray_color(r, &world, MAX_DEPTH);
             }
 
             write_color(&mut file, color, SAMPLES_PER_PIXEL);
