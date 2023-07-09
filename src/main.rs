@@ -1,16 +1,21 @@
 mod hittable;
 pub mod ray;
-mod vector;
 mod sphere;
+mod vector;
+mod world;
 
 use std::fs::File;
 use std::io::Result;
 use std::io::Write;
 
+use hittable::HitRecord;
+use hittable::Hittable;
 use ray::Ray;
+use sphere::Sphere;
 use vector::unit_vector;
 use vector::Color;
 use vector::Point;
+use world::World;
 
 // IMAGE
 const ASPECT_RATIO: f64 = 16.0 / 9.0;
@@ -30,17 +35,15 @@ const VERTICAL: Point = Point::new(0.0, VIEWPORT_HEIGHT, 0.0);
 const MAX_COLOR: i64 = 255;
 const FILE_TYPE: &str = "P3";
 
-fn ray_color(ray: Ray) -> Color {
-    // render a red sphere:
-    let t = ray.hits_sphere(Point::new(0.0, 0.0, -1.0), 0.5);
-
-    if t > 0.0 {
-        let normal = unit_vector(ray.at(t) - Point::new(0.0, 0.0, -1.0));
-        return 0.5 * Color::new(normal.x + 1.0, normal.y + 1.0, normal.z + 1.0);
+fn ray_color(ray: Ray, world: &World) -> Color {
+    let mut record = HitRecord::new();
+    if world.hit(ray, 0.0, f64::INFINITY, &mut record) {
+        return 0.5 * (record.normal + Color::new(1.0, 1.0, 1.0));
     }
 
     let unit_direction = unit_vector(ray.direction);
     let t = 0.5 * (unit_direction.y + 1.0);
+
     (1.0 - t) * Color::new(1.0, 1.0, 1.0) + t * Color::new(0.5, 0.7, 1.0)
 }
 
@@ -57,7 +60,7 @@ fn write_color(file: &mut File, color: Color) {
         (color.y * 255.999) as i64,
         (color.z * 255.999) as i64
     );
-    file.write(&string.as_bytes()).unwrap();
+    file.write_all(string.as_bytes()).unwrap();
 }
 
 fn main() {
@@ -66,12 +69,16 @@ fn main() {
     let lower_left_corner: Point =
         ORIGIN - (HORIZONTAL / 2.0) - (VERTICAL / 2.0) - Point::new(0.0, 0.0, FOCAL_LENGTH);
 
+    let world: Vec<Box<dyn Hittable>> = vec![
+        Box::new(Sphere::new(Point::new(0.0, 0.0, -1.0), 0.5)),
+        Box::new(Sphere::new(Point::new(0.0, -100.5, -1.0), 100.0)),
+    ];
+
     // render
     let header = format!(
         "{}\n{} {}\n{}\n",
         FILE_TYPE, IMAGE_WIDTH, IMAGE_HEIGHT, MAX_COLOR
-    )
-    .to_string();
+    );
 
     // code can panic here
     let mut file = write_file(header.as_str()).unwrap();
@@ -88,7 +95,7 @@ fn main() {
                 lower_left_corner + u * HORIZONTAL + v * VERTICAL - ORIGIN,
             );
 
-            let color = ray_color(r);
+            let color = ray_color(r, &world);
 
             write_color(&mut file, color);
         }
