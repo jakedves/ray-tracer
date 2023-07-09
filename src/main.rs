@@ -16,7 +16,6 @@ use hittable::HitRecord;
 use hittable::Hittable;
 use ray::Ray;
 use sphere::Sphere;
-use vector::random_in_unit_sphere;
 use vector::random_unit_vector;
 use vector::unit_vector;
 use vector::Color;
