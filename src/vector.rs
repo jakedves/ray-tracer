@@ -53,3 +53,11 @@ pub fn reflect(vector_in: Point, normal: Point) -> Point {
 pub fn hadamard(a: Point, b: Point) -> Point {
     Point::new(a.x * b.x, a.y * b.y, a.z * b.z)
 }
+
+pub fn refract(uv: Point, normal: Point, refractive_index: f64) -> Point {
+    let cos_theta = normal.dot(-uv).min(1.0);
+    let r_out_perpendicular = refractive_index * (uv + cos_theta * normal);
+    let r_out_parallel = -(1.0 - length_squared(r_out_perpendicular)).sqrt() * normal;
+
+    r_out_parallel + r_out_perpendicular
+}
