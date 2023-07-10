@@ -6,6 +6,7 @@ mod sphere;
 mod vector;
 mod world;
 
+use std::f64::consts::PI;
 use std::fs::File;
 use std::io::Result;
 use std::io::Write;
@@ -29,6 +30,7 @@ const IMAGE_WIDTH: i64 = 480;
 const IMAGE_HEIGHT: i64 = 270;
 const SAMPLES_PER_PIXEL: i64 = 100;
 const MAX_DEPTH: i64 = 50;
+const ASPECT_RATIO: f64 = 16.0 / 9.0;
 
 // MATERIALS
 const MATERIAL_GROUND: Material = Material::Lambertian {
@@ -39,13 +41,12 @@ const MATERIAL_CENTER: Material = Material::Lambertian {
     albedo: Color::new(0.1, 0.2, 0.5),
 };
 
-const MATERIAL_LEFT: Material = Material::Dielectric {
-    refraction_index: 1.5,
+const MATERIAL_LEFT: Material = Material::Lambertian {
+    albedo: Color::new(0.0, 0.0, 1.0),
 };
 
-const MATERIAL_RIGHT: Material = Material::Metal {
-    albedo: Color::new(0.8, 0.6, 0.2),
-    fuzz: 0.0,
+const MATERIAL_RIGHT: Material = Material::Lambertian {
+    albedo: Color::new(1.0, 0.0, 0.0),
 };
 
 // FILE
@@ -110,27 +111,14 @@ fn write_color(file: &mut File, color: Color, samples: i64) {
 }
 
 fn main() {
+    let r = (PI / 4.0).cos();
+
     let world: Vec<Box<dyn Hittable>> = vec![
-        Box::new(Sphere::new(
-            Point::new(0.0, -100.5, -1.0),
-            100.0,
-            MATERIAL_GROUND,
-        )),
-        Box::new(Sphere::new(
-            Point::new(0.0, 0.0, -1.0),
-            0.5,
-            MATERIAL_CENTER,
-        )),
-        Box::new(Sphere::new(Point::new(-1.0, 0.0, -1.0), 0.5, MATERIAL_LEFT)),
-        Box::new(Sphere::new(
-            Point::new(-1.0, 0.0, -1.0),
-            -0.4,
-            MATERIAL_LEFT,
-        )),
-        Box::new(Sphere::new(Point::new(1.0, 0.0, -1.0), 0.5, MATERIAL_RIGHT)),
+        Box::new(Sphere::new(Point::new(-r, 0.0, -1.0), r, MATERIAL_LEFT)),
+        Box::new(Sphere::new(Point::new(r, 0.0, -1.0), r, MATERIAL_RIGHT)),
     ];
 
-    let camera = Camera::new();
+    let camera = Camera::new(90.0, ASPECT_RATIO);
 
     // render
     let header = format!(
