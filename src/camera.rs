@@ -10,7 +10,7 @@ pub struct Camera {
     vertical: Point,
     u: Point,
     v: Point,
-    w: Point,
+    _w: Point,
     lens_radius: f64,
 }
 
@@ -47,7 +47,7 @@ impl Camera {
             lower_left_corner,
             u,
             v,
-            w,
+            _w: w,
             lens_radius,
         }
     }
