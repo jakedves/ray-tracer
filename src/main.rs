@@ -1,5 +1,6 @@
 mod camera;
 mod hittable;
+mod material;
 pub mod ray;
 mod sphere;
 mod vector;
@@ -9,6 +10,7 @@ use std::fs::File;
 use std::io::Result;
 use std::io::Write;
 
+use material::Material;
 use rand::Rng;
 
 use camera::Camera;
@@ -16,7 +18,7 @@ use hittable::HitRecord;
 use hittable::Hittable;
 use ray::Ray;
 use sphere::Sphere;
-use vector::random_unit_vector;
+use vector::hadamard;
 use vector::unit_vector;
 use vector::Color;
 use vector::Point;
@@ -28,6 +30,25 @@ const IMAGE_HEIGHT: i64 = 270;
 const SAMPLES_PER_PIXEL: i64 = 100;
 const MAX_DEPTH: i64 = 50;
 
+// MATERIALS
+const MATERIAL_GROUND: Material = Material::Lambertian {
+    albedo: Color::new(0.8, 0.8, 0.0),
+};
+
+const MATERIAL_CENTER: Material = Material::Lambertian {
+    albedo: Color::new(0.7, 0.3, 0.3),
+};
+
+const MATERIAL_LEFT: Material = Material::Metal {
+    albedo: Color::new(0.8, 0.8, 0.8),
+    fuzz: 0.3,
+};
+
+const MATERIAL_RIGHT: Material = Material::Metal {
+    albedo: Color::new(0.8, 0.6, 0.2),
+    fuzz: 1.0,
+};
+
 // FILE
 const MAX_COLOR: i64 = 255;
 const FILE_TYPE: &str = "P3";
@@ -36,17 +57,25 @@ fn ray_color(ray: Ray, world: &World, depth: i64) -> Color {
     let mut record = HitRecord::new();
 
     if depth <= 0 {
+        // println!("{}", "(0, 0, 0) as depth less than or equal to 0");
         return Color::new(0.0, 0.0, 0.0);
     }
 
     if world.hit(ray, 0.001, f64::INFINITY, &mut record) {
-        let target = record.point + record.normal + random_unit_vector();
-        return 0.5
-            * ray_color(
-                Ray::new(record.point, target - record.point),
-                world,
-                depth - 1,
-            );
+        // will be updated, using defaults
+        let mut scattered = Ray::new(Point::new(0.0, 0.0, 0.0), Point::new(0.0, 0.0, 0.0));
+        let mut attenuation = Color::new(0.0, 0.0, 0.0);
+
+        let material = record.material;
+        let ray_does_scatter = material.scatter(ray, &record, &mut attenuation, &mut scattered);
+
+        if ray_does_scatter {
+            // println!("{}", "computing Hadamard as ray scattered");
+            return hadamard(attenuation, ray_color(scattered, world, depth - 1));
+        }
+
+        // println!("{}", "(0, 0, 0) as ray did not scatter");
+        return Color::new(0.0, 0.0, 0.0);
     }
 
     let unit_direction = unit_vector(ray.direction);
@@ -83,8 +112,18 @@ fn write_color(file: &mut File, color: Color, samples: i64) {
 
 fn main() {
     let world: Vec<Box<dyn Hittable>> = vec![
-        Box::new(Sphere::new(Point::new(0.0, 0.0, -1.0), 0.5)),
-        Box::new(Sphere::new(Point::new(0.0, -100.5, -1.0), 100.0)),
+        Box::new(Sphere::new(
+            Point::new(0.0, -100.5, -1.0),
+            100.0,
+            MATERIAL_GROUND,
+        )),
+        Box::new(Sphere::new(
+            Point::new(0.0, 0.0, -1.0),
+            0.5,
+            MATERIAL_CENTER,
+        )),
+        Box::new(Sphere::new(Point::new(-1.0, 0.0, -1.0), 0.5, MATERIAL_LEFT)),
+        Box::new(Sphere::new(Point::new(1.0, 0.0, -1.0), 0.5, MATERIAL_RIGHT)),
     ];
 
     let camera = Camera::new();
@@ -112,6 +151,8 @@ fn main() {
                 let r = camera.get_ray(u, v);
 
                 color += ray_color(r, &world, MAX_DEPTH);
+                // COLOR = (0, 0, 0) here
+                // maybe ray_color always returns (0, 0, 0)
             }
 
             write_color(&mut file, color, SAMPLES_PER_PIXEL);

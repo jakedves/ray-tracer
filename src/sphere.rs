@@ -2,6 +2,7 @@ use cgmath::InnerSpace;
 
 use crate::{
     hittable::{HitRecord, Hittable},
+    material::Material,
     ray::Ray,
     vector::{length_squared, Point},
 };
@@ -10,11 +11,16 @@ use crate::{
 pub struct Sphere {
     pub center: Point,
     pub radius: f64,
+    pub material: Material,
 }
 
 impl Sphere {
-    pub fn new(center: Point, radius: f64) -> Self {
-        Sphere { center, radius }
+    pub fn new(center: Point, radius: f64, material: Material) -> Self {
+        Sphere {
+            center,
+            radius,
+            material,
+        }
     }
 }
 
@@ -26,6 +32,7 @@ impl Hittable for Sphere {
         let c = length_squared(translation) - self.radius.powi(2);
 
         let discriminant = half_b.powi(2) - a * c;
+        // println!("{} {}", "Discriminant: ", discriminant);
 
         if discriminant < 0.0 {
             return false;
@@ -49,6 +56,7 @@ impl Hittable for Sphere {
 
         let outward_normal = (record.point - self.center) / self.radius;
         record.set_face_normal(ray, outward_normal);
+        record.material = self.material;
 
         true
     }
