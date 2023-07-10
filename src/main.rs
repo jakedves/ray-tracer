@@ -143,8 +143,6 @@ fn main() {
                 let r = camera.get_ray(u, v);
 
                 color += ray_color(r, &world, MAX_DEPTH);
-                // COLOR = (0, 0, 0) here
-                // maybe ray_color always returns (0, 0, 0)
             }
 
             write_color(&mut file, color, SAMPLES_PER_PIXEL);
