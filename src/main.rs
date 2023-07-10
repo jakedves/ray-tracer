@@ -20,6 +20,7 @@ use ray::Ray;
 use sphere::Sphere;
 use vector::hadamard;
 use vector::unit_vector;
+use vector::vector_length;
 use vector::Color;
 use vector::Point;
 use world::World;
@@ -131,12 +132,20 @@ fn main() {
         Box::new(Sphere::new(Point::new(1.0, 0.0, -1.0), 0.5, MATERIAL_RIGHT)),
     ];
 
+    let look_from = Point::new(3.0, 3.0, 2.0);
+    let look_at = Point::new(0.0, 0.0, -1.0);
+    let view_up = Point::new(0.0, 1.0, 0.0);
+    let distance_to_focus = vector_length(look_from - look_at);
+    let aperture = 2.0;
+
     let camera = Camera::new(
-        Point::new(-2.0, 2.0, 1.0),
-        Point::new(0.0, 0.0, -1.0),
-        Point::new(0.0, 1.0, 0.0),
+        look_from,
+        look_at,
+        view_up,
         20.0,
         ASPECT_RATIO,
+        aperture,
+        distance_to_focus,
     );
 
     // render

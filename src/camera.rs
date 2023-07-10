@@ -1,6 +1,6 @@
 use crate::{
     ray::Ray,
-    vector::{unit_vector, Point},
+    vector::{random_in_unit_disk, unit_vector, Point},
 };
 
 pub struct Camera {
@@ -8,6 +8,10 @@ pub struct Camera {
     lower_left_corner: Point,
     horizontal: Point,
     vertical: Point,
+    u: Point,
+    v: Point,
+    w: Point,
+    lens_radius: f64,
 }
 
 impl Camera {
@@ -17,6 +21,8 @@ impl Camera {
         view_up: Point,
         vertical_fov: f64,
         aspect_ratio: f64,
+        aperture: f64,
+        focus_distance: f64,
     ) -> Self {
         let theta = vertical_fov.to_radians();
         let h = (theta / 2.0).tan();
@@ -28,23 +34,33 @@ impl Camera {
         let v = w.cross(u);
 
         let origin = look_from;
-        let horizontal = viewport_width * u;
-        let vertical = viewport_height * v;
-        let lower_left_corner = origin - horizontal / 2.0 - vertical / 2.0 - w;
+        let horizontal = focus_distance * viewport_width * u;
+        let vertical = focus_distance * viewport_height * v;
+        let lower_left_corner = origin - horizontal / 2.0 - vertical / 2.0 - focus_distance * w;
+
+        let lens_radius = aperture / 2.0;
 
         Camera {
             origin,
             horizontal,
             vertical,
             lower_left_corner,
+            u,
+            v,
+            w,
+            lens_radius,
         }
     }
 
     pub fn get_ray(&self, s: f64, t: f64) -> Ray {
+        let random = self.lens_radius * random_in_unit_disk();
+        let offset = self.u * random.x + self.v * random.y;
+
         Ray {
-            origin: self.origin,
+            origin: self.origin + offset,
             direction: self.lower_left_corner + s * self.horizontal + t * self.vertical
-                - self.origin,
+                - self.origin
+                - offset,
         }
     }
 }

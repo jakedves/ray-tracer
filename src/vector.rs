@@ -40,6 +40,17 @@ pub fn random_unit_vector() -> Point {
     unit_vector(random_in_unit_sphere())
 }
 
+pub fn random_in_unit_disk() -> Point {
+    let mut rng = rand::thread_rng();
+
+    loop {
+        let p = Point::new(rng.gen_range(-1.0..1.0), rng.gen_range(-1.0..1.0), 0.0);
+        if length_squared(p) < 1.0 {
+            return p;
+        }
+    }
+}
+
 pub fn near_zero(vector: Point) -> bool {
     let limit = 1e-8;
 
