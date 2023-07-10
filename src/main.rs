@@ -36,17 +36,16 @@ const MATERIAL_GROUND: Material = Material::Lambertian {
 };
 
 const MATERIAL_CENTER: Material = Material::Lambertian {
-    albedo: Color::new(0.7, 0.3, 0.3),
+    albedo: Color::new(0.1, 0.2, 0.5),
 };
 
-const MATERIAL_LEFT: Material = Material::Metal {
-    albedo: Color::new(0.8, 0.8, 0.8),
-    fuzz: 0.3,
+const MATERIAL_LEFT: Material = Material::Dielectric {
+    refraction_index: 1.5,
 };
 
 const MATERIAL_RIGHT: Material = Material::Metal {
     albedo: Color::new(0.8, 0.6, 0.2),
-    fuzz: 1.0,
+    fuzz: 0.0,
 };
 
 // FILE
@@ -123,6 +122,11 @@ fn main() {
             MATERIAL_CENTER,
         )),
         Box::new(Sphere::new(Point::new(-1.0, 0.0, -1.0), 0.5, MATERIAL_LEFT)),
+        Box::new(Sphere::new(
+            Point::new(-1.0, 0.0, -1.0),
+            -0.4,
+            MATERIAL_LEFT,
+        )),
         Box::new(Sphere::new(Point::new(1.0, 0.0, -1.0), 0.5, MATERIAL_RIGHT)),
     ];
 
