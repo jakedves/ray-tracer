@@ -4,9 +4,9 @@ A ray tracer written in Rust, based off the C++ version found in [*Ray Tracing i
 
 I used the C++ version and tried to translate it to Rust to learn the language more, rather than just using the Rust version of the book.
 
-Not a perfect implementation but a fun project, here is my final render:
+Not a perfect implementation but a very fun project, and here is my final render:
 
-
+![A beautiful image with lots of different and reflective spheres](https://github.com/jakedves/ray-tracer/blob/main/render.png)
 
 ## What I Learnt
 
