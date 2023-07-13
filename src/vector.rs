@@ -21,6 +21,16 @@ pub fn random() -> Point {
     let mut rng = rand::thread_rng();
 
     Point {
+        x: rng.gen_range(0.0..1.0),
+        y: rng.gen_range(0.0..1.0),
+        z: rng.gen_range(0.0..1.0),
+    }
+}
+
+pub fn random_negative() -> Point {
+    let mut rng = rand::thread_rng();
+
+    Point {
         x: rng.gen_range(-1.0..1.0),
         y: rng.gen_range(-1.0..1.0),
         z: rng.gen_range(-1.0..1.0),
@@ -29,7 +39,7 @@ pub fn random() -> Point {
 
 pub fn random_in_unit_sphere() -> Point {
     loop {
-        let point = random();
+        let point = random_negative();
         if length_squared(point) < 1.0 {
             return point;
         }

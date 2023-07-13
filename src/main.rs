@@ -127,7 +127,7 @@ fn random_scene() -> World {
                 } else if choose_mat < 0.95 {
                     // metal
                     let albedo = random();
-                    let fuzz = rng.gen_range(0.0..0.5);
+                    let fuzz = rng.gen_range(0.5..1.0);
                     sphere_material = Material::Metal { albedo, fuzz };
                 } else {
                     // glass
